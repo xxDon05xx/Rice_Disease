@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>നെല്ലിലെ രോഗനിർണ്ണയം</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<!-- hi -->
+
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <!-- User: Replace 'static/title.png' with your actual title image -->
+                <img src="{{ url_for('static', filename='title.png') }}" alt="Rice Doctor Title" class="title-image">
+                <nav>
+                    <a href="/" class="nav-link">ഡാഷ്ബോർഡ്</a>
+                    <a href="/scan" class="nav-link active">സ്കാൻ ചെയ്യുക</a>
+                    <a href="/chat" class="nav-link">കൂട്ടായ്മ</a>
+                    <a href="/contact" class="nav-link">ബന്ധപ്പെടുക</a>
+
+                    {% if session.get('username') %}
+                    <span class="nav-user">👤 {{ session['username'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link logout-btn">Logout</a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link login-btn">Login</a>
+                    {% endif %}
+                </nav>
+            </div>
+    </header>
+
+    <main class="main-content">
+        <div class="hero-section">
+            <div class="container">
+                <!-- Weather bar — populated by JS after geolocation -->
+                <div id="weather-bar" class="hidden"></div>
+
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <h1>നിങ്ങളുടെ നെൽകൃഷി സംരക്ഷിക്കുക</h1>
+                        <p>രോഗം തിരിച്ചറിയാൻ നെൽച്ചെടിയുടെ ഇലയുടെ ചിത്രം അപ്‌ലോഡ് ചെയ്യുക.</p>
+                    </div>
+
+                    <div class="upload-card">
+                        <div class="upload-section">
+                            <form id="upload-form" enctype="multipart/form-data">
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="file-input" name="file" accept="image/*" hidden>
+                                    <label for="file-input" class="file-label">
+                                        <span class="icon">📁</span>
+                                        <span class="text">ചിത്രം തിരഞ്ഞെടുക്കൂ</span>
+                                    </label>
+                                </div>
+                            </form>
+
+                            <div id="preview-container" class="hidden">
+                                <img id="image-preview" src="" alt="Image Preview">
+                            </div>
+
+                            <button id="analyze-btn" class="btn primary hidden">പരിശോധിക്കുക</button>
+                        </div>
+
+                        <div id="result-section" class="hidden">
+                            <div class="loader hidden" id="loader"></div>
+                            <div id="result-content">
+                                <h2>പരിശോധനാ ഫലം</h2>
+                                <p class="prediction-text">രോഗം: <span id="disease-name" class="highlight"></span></p>
+                                <p class="confidence-text">കൃത്യത: <span id="confidence-score"></span>%</p>
+                                <p class="severity-text hidden" id="severity-container"
+                                    style="margin-top: 0.5rem; font-weight: 600;">തീവ്രത: <span id="severity-score"
+                                        style="display:inline-block; padding: 4px 12px; border-radius: 20px; color: white; margin-left: 8px;"></span>
+                                </p>
+                                <div id="recommendation-box" class="recommendation-box hidden">
+                                    <p class="recommendation-label">🌿 ശുപാർശ:</p>
+                                    <p id="recommendation-text" class="recommendation-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Location Request Modal -->
+    <div id="location-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-icon">📍</div>
+            <h2>ലൊക്കേഷൻ അനുമതി</h2>
+            <p>നിങ്ങളുടെ പ്രദേശത്തെ കാലാവസ്ഥയെ അടിസ്ഥാനമാക്കി കൂടുതൽ കൃത്യമായ നിർദ്ദേശങ്ങൾ നൽകുന്നതിന് നിങ്ങളുടെ
+                ലൊക്കേഷൻ ആവശ്യമാണ്.</p>
+            <div class="modal-buttons">
+                <button id="allow-location-btn" class="btn primary">അനുവദിക്കുക</button>
+                <button id="deny-location-btn" class="btn secondary">വേണ്ട</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

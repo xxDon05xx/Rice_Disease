@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>കർഷക കൂട്ടായ്മ | Rice Doctor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== FACEBOOK-STYLE FORUM ===== */
+        .forum-wrapper {
+            max-width: 680px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+
+        /* --- Create Post Card --- */
+        .create-post-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .create-post-top {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+
+        .avatar.small {
+            width: 32px;
+            height: 32px;
+            font-size: 0.8rem;
+        }
+
+        .post-input-trigger {
+            flex: 1;
+            background: #f0f2f5;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 0.95rem;
+            color: #65676b;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .post-input-trigger:hover {
+            background: #e4e6e9;
+        }
+
+        .create-post-divider {
+            height: 1px;
+            background: #e4e6e9;
+            margin: 0.75rem 0;
+        }
+
+        .create-post-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #65676b;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .action-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .action-btn .icon {
+            font-size: 1.2rem;
+        }
+
+        /* --- Post Composer Modal --- */
+        .composer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .composer-overlay.hidden {
+            display: none;
+        }
+
+        .composer-card {
+            background: white;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 500px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .composer-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e4e6e9;
+            position: relative;
+        }
+
+        .composer-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            color: #1c1e21;
+        }
+
+        .composer-close {
+            position: absolute;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e4e6e9;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .composer-close:hover {
+            background: #d8dadf;
+        }
+
+        .composer-body {
+            padding: 1rem 1.25rem;
+        }
+
+        .composer-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .composer-user .name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #1c1e21;
+        }
+
+        .composer-textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 1.1rem;
+            font-family: inherit;
+            color: #1c1e21;
+            resize: none;
+            min-height: 100px;
+            box-sizing: border-box;
+        }
+
+        .composer-textarea::placeholder {
+            color: #b0b3b8;
+        }
+
+        .composer-image-preview {
+            margin-top: 0.75rem;
+            position: relative;
+            display: none;
+        }
+
+        .composer-image-preview img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e4e6e9;
+        }
+
+        .composer-image-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .composer-footer {
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid #e4e6e9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .composer-add-image {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: none;
+            border: none;
+            color: #45bd62;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .composer-add-image:hover {
+            background: #f0f2f5;
+        }
+
+        .composer-submit {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 8px 32px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .composer-submit:hover {
+            background: #27ae60;
+        }
+
+        .composer-submit:disabled {
+            background: #b0b3b8;
+            cursor: not-allowed;
+        }
+
+        /* --- Post Card --- */
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem 0.5rem;
+        }
+
+        .post-user-info .post-username {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #1c1e21;
+        }
+
+        .post-user-info .post-time {
+            font-size: 0.8rem;
+            color: #65676b;
+        }
+
+        .post-body {
+            padding: 0.25rem 1.25rem 0.75rem;
+        }
+
+        .post-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #1c1e21;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .post-image:hover {
+            opacity: 0.95;
+        }
+
+        .post-stats {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.85rem;
+            color: #65676b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .post-stats-left {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .post-actions-bar {
+            display: flex;
+            border-top: 1px solid #e4e6e9;
+            margin: 0 1.25rem;
+        }
+
+        .post-action {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 8px 0;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #65676b;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            border-radius: 6px;
+            margin: 4px 2px;
+            font-family: inherit;
+        }
+
+        .post-action:hover {
+            background: #f0f2f5;
+        }
+
+        .post-action.liked {
+            color: #e74c3c;
+        }
+
+        /* --- Replies --- */
+        .replies-section {
+            border-top: 1px solid #e4e6e9;
+            padding: 0.5rem 1.25rem 0.75rem;
+            background: #f7f8fa;
+        }
+
+        .reply-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .reply-bubble {
+            background: #e4e6e9;
+            border-radius: 18px;
+            padding: 8px 14px;
+            max-width: 85%;
+        }
+
+        .reply-username {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: #1c1e21;
+        }
+
+        .reply-text {
+            font-size: 0.88rem;
+            color: #1c1e21;
+            line-height: 1.35;
+        }
+
+        .reply-time {
+            font-size: 0.72rem;
+            color: #65676b;
+            margin-top: 2px;
+            padding-left: 14px;
+        }
+
+        .reply-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .reply-input {
+            flex: 1;
+            background: #e4e6e9;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 0.88rem;
+            font-family: inherit;
+            color: #1c1e21;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        .reply-input:focus {
+            background: #d8dadf;
+        }
+
+        .reply-input::placeholder {
+            color: #65676b;
+        }
+
+        .reply-send {
+            background: none;
+            border: none;
+            color: #2ecc71;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.2s;
+        }
+
+        .reply-send:hover {
+            transform: scale(1.15);
+        }
+
+        /* --- States --- */
+        .posts-loading,
+        .posts-empty {
+            text-align: center;
+            padding: 3rem;
+            color: #65676b;
+        }
+
+        .posts-empty {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .posts-empty .icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- Image Lightbox --- */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 4000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        .lightbox.hidden {
+            display: none;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .forum-wrapper {
+                margin: 1rem auto;
+                padding: 0 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <a href="/">
+                    <img src="{{ url_for('static', filename='title.png') }}" alt="Rice Doctor Title"
+                        class="title-image">
+                </a>
+                <nav>
+                    <a href="/" class="nav-link">ഡാഷ്ബോർഡ്</a>
+                    <a href="/scan" class="nav-link">സ്കാൻ ചെയ്യുക</a>
+                    <a href="/chat" class="nav-link active">കൂട്ടായ്മ</a>
+                    <a href="/contact" class="nav-link">ബന്ധപ്പെടുക</a>
+
+                    {% if session.get('username') %}
+                    <span class="nav-user">👤 {{ session['username'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link logout-btn">Logout</a>
+                    {% endif %}
+                </nav>
+            </div>
+    </header>
+
+    <main class="main-content" style="align-items: flex-start;">
+        <div class="forum-wrapper">
+
+            <!-- Create Post Card -->
+            <div class="create-post-card">
+                <div class="create-post-top">
+                    <div class="avatar" id="user-avatar"></div>
+                    <button class="post-input-trigger" id="open-composer">
+                        എന്തെങ്കിലും പങ്കുവെക്കണോ?
+                    </button>
+                </div>
+                <div class="create-post-divider"></div>
+                <div class="create-post-actions">
+                    <button class="action-btn" id="open-composer-photo">
+                        <span class="icon">📷</span> ചിത്രം / ഫോട്ടോ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Posts Feed -->
+            <div id="posts-feed">
+                <div class="posts-loading">⏳ പോസ്റ്റുകൾ ലോഡ് ചെയ്യുന്നു...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Post Composer Modal -->
+    <div class="composer-overlay hidden" id="composer-overlay">
+        <div class="composer-card">
+            <div class="composer-header">
+                <h3>പുതിയ പോസ്റ്റ്</h3>
+                <button class="composer-close" id="composer-close">✕</button>
+            </div>
+            <div class="composer-body">
+                <div class="composer-user">
+                    <div class="avatar" id="composer-avatar"></div>
+                    <span class="name" id="composer-name"></span>
+                </div>
+                <textarea class="composer-textarea" id="composer-text"
+                    placeholder="നിങ്ങളുടെ കൃഷി അനുഭവങ്ങൾ, സംശയങ്ങൾ, അല്ലെങ്കിൽ ചെടിയുടെ ചിത്രം പങ്കുവെക്കൂ..."></textarea>
+                <div class="composer-image-preview" id="composer-preview">
+                    <img id="composer-preview-img" src="" alt="">
+                    <button class="composer-image-remove" id="composer-remove-img">✕</button>
+                </div>
+            </div>
+            <div class="composer-footer">
+                <div>
+                    <input type="file" id="composer-file" accept="image/*" hidden>
+                    <button class="composer-add-image" id="composer-add-image-btn">📷 ചിത്രം ചേർക്കുക</button>
+                </div>
+                <button class="composer-submit" id="composer-submit">പോസ്റ്റ് ചെയ്യുക</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div class="lightbox hidden" id="lightbox">
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <script>
+        const currentUser = "{{ session.get('username') }}";
+        const feed = document.getElementById('posts-feed');
+
+        // Set user avatar initials
+        const initials = currentUser ? currentUser.charAt(0).toUpperCase() : '?';
+        document.getElementById('user-avatar').textContent = initials;
+        document.getElementById('composer-avatar').textContent = initials;
+        document.getElementById('composer-name').textContent = currentUser;
+
+        // Track last data to avoid unnecessary re-renders
+        let lastPostsJSON = '';
+        let userIsInteracting = false;
+
+        // Detect when user is typing or clicking inside the feed
+        document.addEventListener('focusin', (e) => {
+            if (e.target.closest('#posts-feed') || e.target.closest('.composer-overlay')) {
+                userIsInteracting = true;
+            }
+        });
+        document.addEventListener('focusout', (e) => {
+            if (e.target.closest('#posts-feed')) {
+                // Small delay to handle click-then-focus scenarios
+                setTimeout(() => { userIsInteracting = false; }, 300);
+            }
+        });
+
+        // --- Composer ---
+        const overlay = document.getElementById('composer-overlay');
+        const composerText = document.getElementById('composer-text');
+        const composerFile = document.getElementById('composer-file');
+        const composerPreview = document.getElementById('composer-preview');
+        const composerPreviewImg = document.getElementById('composer-preview-img');
+        const composerSubmit = document.getElementById('composer-submit');
+
+        document.getElementById('open-composer').addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+            composerText.focus();
+        });
+        document.getElementById('open-composer-photo').addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+            composerFile.click();
+        });
+        document.getElementById('composer-close').addEventListener('click', closeComposer);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeComposer(); });
+
+        document.getElementById('composer-add-image-btn').addEventListener('click', () => composerFile.click());
+
+        composerFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    composerPreviewImg.src = ev.target.result;
+                    composerPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('composer-remove-img').addEventListener('click', () => {
+            composerFile.value = '';
+            composerPreview.style.display = 'none';
+            composerPreviewImg.src = '';
+        });
+
+        composerSubmit.addEventListener('click', async () => {
+            const text = composerText.value.trim();
+            const file = composerFile.files[0];
+            if (!text && !file) return;
+
+            composerSubmit.disabled = true;
+            composerSubmit.textContent = '⏳ ...';
+
+            const formData = new FormData();
+            if (text) formData.append('text', text);
+            if (file) formData.append('image', file);
+
+            try {
+                await fetch('/api/posts', { method: 'POST', body: formData });
+                closeComposer();
+                lastPostsJSON = ''; // Force refresh
+                loadPosts();
+            } catch (err) {
+                alert('പോസ്റ്റ് ചെയ്യാൻ കഴിഞ്ഞില്ല');
+            }
+            composerSubmit.disabled = false;
+            composerSubmit.textContent = 'പോസ്റ്റ് ചെയ്യുക';
+        });
+
+        function closeComposer() {
+            overlay.classList.add('hidden');
+            composerText.value = '';
+            composerFile.value = '';
+            composerPreview.style.display = 'none';
+            composerPreviewImg.src = '';
+            userIsInteracting = false;
+        }
+
+        // --- Lightbox ---
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        lightbox.addEventListener('click', () => lightbox.classList.add('hidden'));
+
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.classList.remove('hidden');
+        }
+
+        // --- Format timestamp properly ---
+        function formatTime(ts) {
+            try {
+                const date = new Date(ts);
+                if (isNaN(date.getTime())) return ts;
+
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMin = Math.floor(diffMs / 60000);
+                const diffHour = Math.floor(diffMs / 3600000);
+
+                // Less than 1 minute
+                if (diffMin < 1) return 'ഇപ്പോൾ';
+                // Less than 1 hour
+                if (diffMin < 60) return `${diffMin} മിനിറ്റ് മുൻപ്`;
+                // Less than 24 hours
+                if (diffHour < 24) return `${diffHour} മണിക്കൂർ മുൻപ്`;
+
+                // Show full date + time for older posts
+                const day = date.getDate();
+                const months = ['ജനുവരി', 'ഫെബ്രുവരി', 'മാർച്ച്', 'ഏപ്രിൽ', 'മേയ്', 'ജൂൺ',
+                    'ജൂലൈ', 'ഓഗസ്റ്റ്', 'സെപ്റ്റംബർ', 'ഒക്ടോബർ', 'നവംബർ', 'ഡിസംബർ'];
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                let hours = date.getHours();
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+
+                // Same year? Don't show year
+                if (date.getFullYear() === now.getFullYear()) {
+                    return `${month} ${day}, ${hours}:${minutes} ${ampm}`;
+                }
+                return `${month} ${day}, ${year} ${hours}:${minutes} ${ampm}`;
+            } catch (e) {
+                return ts;
+            }
+        }
+
+        // --- Like a post ---
+        async function toggleLike(postId) {
+            try {
+                await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+                lastPostsJSON = ''; // Force refresh
+                userIsInteracting = false;
+                loadPosts();
+            } catch (e) {
+                console.error('Like failed', e);
+            }
+        }
+
+        // --- Load Posts (smart: skip if data unchanged or user is typing) ---
+        async function loadPosts() {
+            try {
+                const res = await fetch('/api/posts');
+                const posts = await res.json();
+                const newJSON = JSON.stringify(posts);
+
+                // Skip re-render if data hasn't changed or user is actively interacting
+                if (newJSON === lastPostsJSON) return;
+                if (userIsInteracting && lastPostsJSON !== '') return;
+
+                lastPostsJSON = newJSON;
+
+                if (!posts.length) {
+                    feed.innerHTML = `
+                        <div class="posts-empty">
+                            <div class="icon">🌾</div>
+                            <p>ഇതുവരെ പോസ്റ്റുകൾ ഇല്ല. നിങ്ങളുടെ കൃഷി അനുഭവങ്ങൾ ആദ്യം പങ്കുവെക്കൂ!</p>
+                        </div>`;
+                    return;
+                }
+
+                feed.innerHTML = posts.map(post => {
+                    const postInitial = post.username.charAt(0).toUpperCase();
+                    const replyCount = post.replies ? post.replies.length : 0;
+                    const likesCount = post.likes_count || 0;
+                    const likedByMe = post.liked_by_me || false;
+
+                    let imageHtml = '';
+                    if (post.image_url) {
+                        imageHtml = `<img class="post-image" src="${post.image_url}" alt="Post image" onclick="openLightbox('${post.image_url}')">`;
+                    }
+
+                    let repliesHtml = '';
+                    if (post.replies && post.replies.length) {
+                        repliesHtml = post.replies.map(r => {
+                            const rInitial = r.username.charAt(0).toUpperCase();
+                            return `
+                                <div class="reply-item">
+                                    <div class="avatar small">${rInitial}</div>
+                                    <div>
+                                        <div class="reply-bubble">
+                                            <div class="reply-username">${r.username}</div>
+                                            <div class="reply-text">${escapeHtml(r.text)}</div>
+                                        </div>
+                                        <div class="reply-time">${formatTime(r.timestamp)}</div>
+                                    </div>
+                                </div>`;
+                        }).join('');
+                    }
+
+                    // Stats line
+                    let statsHtml = '';
+                    const statsParts = [];
+                    if (likesCount > 0) statsParts.push(`<span class="post-stats-left">❤️ ${likesCount}</span>`);
+                    if (replyCount > 0) statsParts.push(`💬 ${replyCount} മറുപടി${replyCount > 1 ? 'കൾ' : ''}`);
+                    if (statsParts.length) {
+                        statsHtml = `<div class="post-stats">${statsParts.join('<span style="flex:1"></span>')}</div>`;
+                    }
+
+                    return `
+                        <div class="post-card">
+                            <div class="post-header">
+                                <div class="avatar">${postInitial}</div>
+                                <div class="post-user-info">
+                                    <div class="post-username">${post.username}</div>
+                                    <div class="post-time">${formatTime(post.timestamp)}</div>
+                                </div>
+                            </div>
+                            ${post.text ? `<div class="post-body"><div class="post-text">${escapeHtml(post.text)}</div></div>` : ''}
+                            ${imageHtml}
+                            ${statsHtml}
+                            <div class="post-actions-bar">
+                                <button class="post-action ${likedByMe ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                                    ${likedByMe ? '❤️' : '🤍'} ഇഷ്ടം
+                                </button>
+                                <button class="post-action" onclick="toggleReply(${post.id})">💬 മറുപടി</button>
+                            </div>
+                            <div class="replies-section" id="replies-${post.id}" style="display: ${replyCount > 0 ? 'block' : 'none'}">
+                                ${repliesHtml}
+                                <div class="reply-input-wrapper">
+                                    <div class="avatar small">${initials}</div>
+                                    <input class="reply-input" id="reply-input-${post.id}" placeholder="മറുപടി എഴുതുക..." onkeypress="if(event.key==='Enter')sendReply(${post.id})">
+                                    <button class="reply-send" onclick="sendReply(${post.id})">➤</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+            } catch (e) {
+                console.error('Error loading posts', e);
+            }
+        }
+
+        // --- Escape HTML to prevent XSS ---
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // --- Toggle Reply Section ---
+        function toggleReply(postId) {
+            const section = document.getElementById(`replies-${postId}`);
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                document.getElementById(`reply-input-${postId}`).focus();
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // --- Send Reply ---
+        async function sendReply(postId) {
+            const input = document.getElementById(`reply-input-${postId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            try {
+                await fetch(`/api/posts/${postId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                lastPostsJSON = ''; // Force refresh
+                userIsInteracting = false;
+                loadPosts();
+            } catch (e) {
+                alert('മറുപടി അയക്കാൻ കഴിഞ്ഞില്ല');
+            }
+        }
+
+        // --- Auto-refresh (smart: respects user interaction) ---
+        loadPosts();
+        setInterval(loadPosts, 5000);
+    </script>
+</body>
+
+</html>

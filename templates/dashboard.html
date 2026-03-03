@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ഡാഷ്ബോർഡ് | Rice Doctor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .dashboard-wrapper {
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .dashboard-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1c1e21;
+            margin-bottom: 0.25rem;
+        }
+
+        .dashboard-subtitle {
+            font-size: 0.95rem;
+            color: #65676b;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 1.25rem;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #65676b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        /* --- Weather --- */
+        .weather-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .weather-temp {
+            font-size: 3.5rem;
+            font-weight: 300;
+            line-height: 1;
+            margin: 0.75rem 0;
+        }
+
+        .weather-temp sup {
+            font-size: 1.5rem;
+            vertical-align: top;
+        }
+
+        .weather-date {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+        }
+
+        .weather-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .weather-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+
+        .weather-detail-icon {
+            font-size: 1.5rem;
+            width: 36px;
+            text-align: center;
+        }
+
+        .weather-detail-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .weather-detail-value {
+            font-weight: 600;
+            color: white;
+        }
+
+        /* --- Profile --- */
+        .profile-card {
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin: 0 auto 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .profile-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1c1e21;
+        }
+
+        .profile-role {
+            font-size: 0.85rem;
+            color: #65676b;
+            margin-top: 0.25rem;
+        }
+
+        .profile-stat {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e4e6e9;
+        }
+
+        .profile-stat-item {
+            text-align: center;
+        }
+
+        .profile-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2ecc71;
+        }
+
+        .profile-stat-label {
+            font-size: 0.75rem;
+            color: #65676b;
+            margin-top: 2px;
+        }
+
+        /* --- Severity Trend Banner --- */
+        .trend-banner {
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .trend-banner.improving {
+            background: linear-gradient(135deg, #e6f9ed, #d4f5e2);
+            border-left: 4px solid #2ecc71;
+        }
+
+        .trend-banner.worsening {
+            background: linear-gradient(135deg, #fde8e8, #f9d0d0);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .trend-banner.stable {
+            background: linear-gradient(135deg, #fff8e1, #fff3c4);
+            border-left: 4px solid #f39c12;
+        }
+
+        .trend-icon {
+            font-size: 2rem;
+        }
+
+        .trend-text {
+            flex: 1;
+        }
+
+        .trend-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1c1e21;
+        }
+
+        .trend-desc {
+            font-size: 0.85rem;
+            color: #65676b;
+            margin-top: 2px;
+        }
+
+        .trend-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .trend-badge.improving {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .trend-badge.worsening {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .trend-badge.stable {
+            background: #f39c12;
+            color: white;
+        }
+
+        /* --- Main Area --- */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* --- Stat Cards --- */
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 700px) {
+            .stat-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.green {
+            background: #e6f9ed;
+        }
+
+        .stat-icon.red {
+            background: #fde8e8;
+        }
+
+        .stat-icon.blue {
+            background: #e8f0fd;
+        }
+
+        .stat-icon.orange {
+            background: #fff3e0;
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: #65676b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1c1e21;
+            line-height: 1.2;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .stat-change.positive {
+            color: #2ecc71;
+        }
+
+        .stat-change.negative {
+            color: #e74c3c;
+        }
+
+        .stat-change.neutral {
+            color: #f39c12;
+        }
+
+        /* --- Charts --- */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 700px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+        }
+
+        /* --- Health Ring --- */
+        .health-score-container {
+            text-align: center;
+        }
+
+        .health-score-ring {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 0 auto;
+        }
+
+        .health-score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .health-score-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2ecc71;
+        }
+
+        .health-score-label {
+            font-size: 0.75rem;
+            color: #65676b;
+        }
+
+        .health-score-desc {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: #65676b;
+            line-height: 1.4;
+        }
+
+        /* --- Recent Table --- */
+        .recent-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .recent-table th {
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #65676b;
+            text-transform: uppercase;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 2px solid #e4e6e9;
+        }
+
+        .recent-table td {
+            padding: 0.65rem 0.75rem;
+            font-size: 0.88rem;
+            color: #1c1e21;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .recent-table tr:hover td {
+            background: #f7f8fa;
+        }
+
+        .disease-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .disease-badge.healthy {
+            background: #e6f9ed;
+            color: #27ae60;
+        }
+
+        .disease-badge.diseased {
+            background: #fde8e8;
+            color: #c0392b;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .severity-badge.low {
+            background: #e6f9ed;
+            color: #27ae60;
+        }
+
+        .severity-badge.moderate {
+            background: #fff3e0;
+            color: #e67e22;
+        }
+
+        .severity-badge.high {
+            background: #fde8e8;
+            color: #e74c3c;
+        }
+
+        .severity-badge.severe {
+            background: #c0392b;
+            color: white;
+        }
+
+        .confidence-bar {
+            width: 60px;
+            height: 6px;
+            background: #e4e6e9;
+            border-radius: 3px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: #2ecc71;
+        }
+
+        .recent-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            vertical-align: middle;
+        }
+
+        /* --- Empty/Loading --- */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #65676b;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
+        }
+
+        .dashboard-loading {
+            text-align: center;
+            padding: 4rem;
+            color: #65676b;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <a href="/">
+                    <img src="{{ url_for('static', filename='title.png') }}" alt="Rice Doctor Title"
+                        class="title-image">
+                </a>
+                <nav>
+                    <a href="/" class="nav-link active">ഡാഷ്ബോർഡ്</a>
+                    <a href="/scan" class="nav-link">സ്കാൻ ചെയ്യുക</a>
+                    <a href="/chat" class="nav-link">കൂട്ടായ്മ</a>
+                    <a href="/contact" class="nav-link">ബന്ധപ്പെടുക</a>
+
+                    {% if session.get('username') %}
+                    <span class="nav-user">👤 {{ session['username'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link logout-btn">Logout</a>
+                    {% endif %}
+                </nav>
+            </div>
+    </header>
+
+    <main class="main-content" style="align-items: flex-start;">
+        <div class="dashboard-wrapper" id="dashboard-root">
+            <div class="dashboard-loading">⏳ ഡാഷ്ബോർഡ് ലോഡ് ചെയ്യുന്നു...</div>
+        </div>
+    </main>
+
+    <script>
+        const currentUser = "{{ session.get('username') }}";
+        const root = document.getElementById('dashboard-root');
+
+        // --- Weather ---
+        function fetchWeather(lat, lon) {
+            fetch(`https://wttr.in/${lat},${lon}?format=j1`)
+                .then(res => res.json())
+                .then(data => {
+                    const c = data.current_condition[0];
+                    const temp = c.temp_C;
+                    const humidity = c.humidity;
+                    const desc = c.weatherDesc[0].value;
+                    const rainMm = parseFloat(c.precipMM || 0);
+                    const windKph = c.windspeedKmph;
+                    const descLower = desc.toLowerCase();
+                    let icon = '🌤️';
+                    if (descLower.includes('rain') || descLower.includes('drizzle')) icon = '🌧️';
+                    else if (descLower.includes('thunder')) icon = '⛈️';
+                    else if (descLower.includes('cloud')) icon = '☁️';
+                    else if (descLower.includes('sunny') || descLower.includes('clear')) icon = '☀️';
+
+                    const now = new Date();
+                    const days = ['ഞായർ', 'തിങ്കൾ', 'ചൊവ്വ', 'ബുധൻ', 'വ്യാഴം', 'വെള്ളി', 'ശനി'];
+                    const h = now.getHours(), m = now.getMinutes().toString().padStart(2, '0');
+                    const ampm = h >= 12 ? 'PM' : 'AM', h12 = h % 12 || 12;
+
+                    const el = document.getElementById('weather-card-content');
+                    if (el) el.innerHTML = `
+                        <div class="weather-temp">${temp}<sup>°C</sup></div>
+                        <div class="weather-date">${days[now.getDay()]} ${h12}:${m} ${ampm}</div>
+                        <div class="weather-details">
+                            <div class="weather-detail-row"><span class="weather-detail-icon">${icon}</span><span class="weather-detail-text"><span class="weather-detail-value">${desc}</span></span></div>
+                            <div class="weather-detail-row"><span class="weather-detail-icon">💧</span><span class="weather-detail-text">ആർദ്രത — <span class="weather-detail-value">${humidity}%</span></span></div>
+                            <div class="weather-detail-row"><span class="weather-detail-icon">🌧️</span><span class="weather-detail-text">മഴ — <span class="weather-detail-value">${rainMm} mm</span></span></div>
+                            <div class="weather-detail-row"><span class="weather-detail-icon">💨</span><span class="weather-detail-text">കാറ്റ് — <span class="weather-detail-value">${windKph} km/h</span></span></div>
+                        </div>`;
+                }).catch(() => { });
+        }
+
+        function requestLocation() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(
+                pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+                () => { }, { timeout: 10000 }
+            );
+        }
+
+        // --- Translations ---
+        const T = {
+            'Bacterial Leaf Blight': 'ബാക്ടീരിയൽ ലീഫ് ബ്ലൈറ്റ്',
+            'Brown Spot': 'തവിട്ടു പുള്ളി രോഗം',
+            'Healthy Rice Leaf': 'ആരോഗ്യമുള്ള ഇല',
+            'Leaf Blast': 'ബ്ലാസ്റ്റ് രോഗം',
+            'Leaf scald': 'ഇല കരിച്ചിൽ',
+            'Narrow Brown Leaf Spot': 'നാരോ ബ്രൗൺ ലീഫ് സ്പോട്ട്',
+            'Rice Hispa': 'റൈസ് ഹിസ്പ',
+            'Sheath Blight': 'പോള രോഗം'
+        };
+
+        function formatDate(ts) {
+            try { const d = new Date(ts); const months = ['ജനു', 'ഫെബ്', 'മാർ', 'ഏപ്രി', 'മേയ്', 'ജൂൺ', 'ജൂലൈ', 'ഓഗ', 'സെപ്', 'ഒക്ട', 'നവം', 'ഡിസം']; return `${months[d.getMonth()]} ${d.getDate()}`; } catch { return ts; }
+        }
+
+        function formatDateTime(ts) {
+            try {
+                const d = new Date(ts);
+                const months = ['ജനുവരി', 'ഫെബ്രുവരി', 'മാർച്ച്', 'ഏപ്രിൽ', 'മേയ്', 'ജൂൺ', 'ജൂലൈ', 'ഓഗസ്റ്റ്', 'സെപ്റ്റംബർ', 'ഒക്ടോബർ', 'നവംബർ', 'ഡിസംബർ'];
+                let h = d.getHours(); const m = d.getMinutes().toString().padStart(2, '0');
+                const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+                return `${months[d.getMonth()]} ${d.getDate()}, ${h}:${m} ${ap}`;
+            } catch { return ts; }
+        }
+
+        function getSeverityClass(pct) {
+            if (pct < 15) return 'low';
+            if (pct < 35) return 'moderate';
+            if (pct < 60) return 'high';
+            return 'severe';
+        }
+
+        function getSeverityColor(pct) {
+            if (pct < 15) return '#2ecc71';
+            if (pct < 35) return '#f39c12';
+            if (pct < 60) return '#e74c3c';
+            return '#c0392b';
+        }
+
+        // --- Load Dashboard ---
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/api/dashboard');
+                const data = await res.json();
+
+                if (data.error) {
+                    root.innerHTML = `<div class="card empty-state"><p>${data.error}</p></div>`;
+                    return;
+                }
+
+                if (data.total_scans === 0) {
+                    root.innerHTML = `
+                        <h1 class="dashboard-title">ഡാഷ്ബോർഡ്</h1>
+                        <p class="dashboard-subtitle">👤 ${currentUser} — നിങ്ങളുടെ കൃഷി വിവരങ്ങൾ</p>
+                        <div class="card empty-state">
+                            <div class="icon">🔬</div>
+                            <p><strong>ഇതുവരെ പരിശോധനകൾ നടത്തിയിട്ടില്ല</strong></p>
+                            <p>ചെടിയുടെ ഇല സ്കാൻ ചെയ്ത് നിങ്ങളുടെ ഡാഷ്ബോർഡ് നിറയ്ക്കൂ!</p>
+                            <a href="/" style="display:inline-block;margin-top:1rem;padding:10px 24px;background:#2ecc71;color:white;border-radius:8px;text-decoration:none;font-weight:600;">🌿 ഇല സ്കാൻ ചെയ്യുക</a>
+                        </div>`;
+                    return;
+                }
+
+                const initials = currentUser.charAt(0).toUpperCase();
+                const diseaseLabels = Object.keys(data.disease_breakdown);
+                const diseaseCounts = Object.values(data.disease_breakdown);
+                const diseaseColors = ['#2ecc71', '#e74c3c', '#f39c12', '#3498db', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
+
+                // Trend banner
+                const trend = data.severity_trend || 'stable';
+                const trendPct = data.severity_trend_pct || 0;
+                const trendConfig = {
+                    improving: { icon: '📉', title: 'രോഗ തീവ്രത കുറയുന്നു!', desc: `ശരാശരി തീവ്രത ${Math.abs(trendPct)}% കുറഞ്ഞു. നിങ്ങളുടെ ചികിത്സ ഫലപ്രദമാണ്.`, badge: `↓ ${Math.abs(trendPct)}%` },
+                    worsening: { icon: '📈', title: 'രോഗ തീവ്രത വർധിക്കുന്നു!', desc: `ശരാശരി തീവ്രത ${Math.abs(trendPct)}% വർധിച്ചു. ഉടൻ നടപടി ആവശ്യമാണ്.`, badge: `↑ ${Math.abs(trendPct)}%` },
+                    stable: { icon: '➡️', title: 'രോഗ തീവ്രത സ്ഥിരം', desc: 'ചികിത്സ തുടരുക, കൂടുതൽ സ്കാനുകൾ നടത്തി നിരീക്ഷിക്കുക.', badge: '~' }
+                };
+                const tc = trendConfig[trend];
+
+                let trendBannerHTML = '';
+                if (data.diseased_count > 0) {
+                    trendBannerHTML = `
+                        <div class="trend-banner ${trend}">
+                            <span class="trend-icon">${tc.icon}</span>
+                            <div class="trend-text">
+                                <div class="trend-title">${tc.title}</div>
+                                <div class="trend-desc">${tc.desc}</div>
+                            </div>
+                            <span class="trend-badge ${trend}">${tc.badge}</span>
+                        </div>`;
+                }
+
+                // Recent predictions table
+                let recentRows = data.recent.map(p => {
+                    const isHealthy = p.disease_class === 'Healthy Rice Leaf';
+                    const badgeClass = isHealthy ? 'healthy' : 'diseased';
+                    const conf = p.confidence || 0;
+                    const confColor = conf >= 80 ? '#2ecc71' : conf >= 50 ? '#f39c12' : '#e74c3c';
+                    const sev = p.severity || 0;
+                    const sevClass = isHealthy ? 'low' : getSeverityClass(sev);
+                    const sevLabel = isHealthy ? '—' : `${sev}%`;
+                    return `<tr>
+                        <td>${p.image_url ? `<img class="recent-img" src="${p.image_url}" alt="">` : '—'}</td>
+                        <td><span class="disease-badge ${badgeClass}">${p.disease_ml || p.disease_class}</span></td>
+                        <td><span class="severity-badge ${sevClass}">${sevLabel}</span></td>
+                        <td>
+                            <span class="confidence-bar"><span class="confidence-fill" style="width:${conf}%;background:${confColor}"></span></span>
+                            ${conf.toFixed(1)}%
+                        </td>
+                        <td>${formatDateTime(p.timestamp)}</td>
+                    </tr>`;
+                }).join('');
+
+                // Avg severity stat
+                const avgSev = data.avg_severity || 0;
+
+                root.innerHTML = `
+                    <h1 class="dashboard-title">ഡാഷ്ബോർഡ്</h1>
+                    <p class="dashboard-subtitle">സ്മാർട്ട് കൃഷി ഡാഷ്ബോർഡ് — വിള പ്രകടനവും രോഗ തീവ്രതയും നിരീക്ഷിക്കുക</p>
+
+                    <div class="dashboard-grid">
+                        <!-- LEFT SIDEBAR -->
+                        <div class="weather-sidebar">
+                            <div class="weather-card" id="weather-card-content">
+                                <div class="weather-temp">--<sup>°C</sup></div>
+                                <div class="weather-date">ലൊക്കേഷൻ ലോഡ് ചെയ്യുന്നു...</div>
+                            </div>
+
+                            <div class="card profile-card">
+                                <div class="profile-avatar">${initials}</div>
+                                <div class="profile-name">${currentUser}</div>
+                                <div class="profile-role">🌾 കർഷകൻ</div>
+                                <div class="profile-stat">
+                                    <div class="profile-stat-item">
+                                        <div class="profile-stat-value">${data.total_scans}</div>
+                                        <div class="profile-stat-label">സ്കാനുകൾ</div>
+                                    </div>
+                                    <div class="profile-stat-item">
+                                        <div class="profile-stat-value" style="color:#2ecc71">${data.health_score}%</div>
+                                        <div class="profile-stat-label">ആരോഗ്യ സ്കോർ</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Severity Gauge -->
+                            <div class="card health-score-container">
+                                <div class="card-title">⚡ ശരാശരി തീവ്രത</div>
+                                <div class="health-score-ring">
+                                    <canvas id="severity-ring"></canvas>
+                                    <div class="health-score-text">
+                                        <div class="health-score-value" style="color:${getSeverityColor(avgSev)}">${avgSev}%</div>
+                                        <div class="health-score-label">തീവ്രത</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MAIN AREA -->
+                        <div class="main-area">
+                            <!-- Trend Banner -->
+                            ${trendBannerHTML}
+
+                            <!-- Stat Cards -->
+                            <div class="stat-cards">
+                                <div class="stat-card">
+                                    <div class="stat-icon blue">🔬</div>
+                                    <div>
+                                        <div class="stat-label">ആകെ സ്കാനുകൾ</div>
+                                        <div class="stat-value">${data.total_scans}</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon green">✅</div>
+                                    <div>
+                                        <div class="stat-label">ആരോഗ്യമുള്ളത്</div>
+                                        <div class="stat-value">${data.healthy_count}</div>
+                                        <div class="stat-change positive">↑ ${data.health_score}%</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon red">⚠️</div>
+                                    <div>
+                                        <div class="stat-label">രോഗബാധിതം</div>
+                                        <div class="stat-value">${data.diseased_count}</div>
+                                        <div class="stat-change negative">${data.most_common ? T[data.most_common] || data.most_common : '—'}</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon orange">🔥</div>
+                                    <div>
+                                        <div class="stat-label">ശരാ. തീവ്രത</div>
+                                        <div class="stat-value">${avgSev}%</div>
+                                        <div class="stat-change ${trend === 'improving' ? 'positive' : trend === 'worsening' ? 'negative' : 'neutral'}">
+                                            ${trend === 'improving' ? '↓ കുറയുന്നു' : trend === 'worsening' ? '↑ കൂടുന്നു' : '→ സ്ഥിരം'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts: Timeline + Disease Donut -->
+                            <div class="charts-row">
+                                <div class="card">
+                                    <div class="card-title">📊 രോഗ തീവ്രത ചരിത്രം</div>
+                                    <div class="chart-container">
+                                        <canvas id="severity-timeline-chart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-title">🎯 രോഗ വിഭജനം</div>
+                                    <div class="chart-container">
+                                        <canvas id="disease-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts: Scan Timeline + Health Ring -->
+                            <div class="charts-row">
+                                <div class="card">
+                                    <div class="card-title">📈 സ്കാൻ ടൈംലൈൻ</div>
+                                    <div class="chart-container">
+                                        <canvas id="timeline-chart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="card health-score-container">
+                                    <div class="card-title">🌾 വിള ആരോഗ്യം</div>
+                                    <div class="health-score-ring">
+                                        <canvas id="health-ring"></canvas>
+                                        <div class="health-score-text">
+                                            <div class="health-score-value">${data.health_score}%</div>
+                                            <div class="health-score-label">ആരോഗ്യം</div>
+                                        </div>
+                                    </div>
+                                    <p class="health-score-desc">
+                                        ${data.health_score >= 70
+                        ? '✅ നിങ്ങളുടെ നെൽകൃഷി നല്ല അവസ്ഥയിലാണ്!'
+                        : data.health_score >= 40
+                            ? '⚠️ രോഗബാധ ശ്രദ്ധയിൽ പെട്ടിട്ടുണ്ട്. ശുപാർശകൾ പാലിക്കുക.'
+                            : '🔴 കൃഷിക്ക് ഗുരുതര ഭീഷണി. ഉടൻ നടപടി സ്വീകരിക്കുക!'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Recent Predictions Table -->
+                            <div class="card">
+                                <div class="card-title">📋 സമീപകാല പരിശോധനകൾ</div>
+                                <div style="overflow-x:auto;">
+                                    <table class="recent-table">
+                                        <thead><tr>
+                                            <th>ചിത്രം</th><th>രോഗം</th><th>തീവ്രത</th><th>കൃത്യത</th><th>തീയതി</th>
+                                        </tr></thead>
+                                        <tbody>${recentRows || '<tr><td colspan="5" style="text-align:center;color:#65676b;">ഡാറ്റ ഇല്ല</td></tr>'}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                // === CHARTS ===
+
+                // 1. Severity Timeline (new main chart)
+                const sevCtx = document.getElementById('severity-timeline-chart');
+                if (sevCtx && data.timeline.length > 0) {
+                    new Chart(sevCtx, {
+                        type: 'line',
+                        data: {
+                            labels: data.timeline.map(t => formatDate(t.date)),
+                            datasets: [{
+                                label: 'ശരാശരി തീവ്രത %',
+                                data: data.timeline.map(t => t.avg_severity),
+                                borderColor: '#e74c3c',
+                                backgroundColor: 'rgba(231,76,60,0.08)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 5,
+                                pointBackgroundColor: data.timeline.map(t => getSeverityColor(t.avg_severity)),
+                                borderWidth: 2.5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => `തീവ്രത: ${ctx.parsed.y}%`
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+                            }
+                        }
+                    });
+                }
+
+                // 2. Disease Donut
+                const diseaseCtx = document.getElementById('disease-chart');
+                if (diseaseCtx && diseaseLabels.length > 0) {
+                    new Chart(diseaseCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: diseaseLabels.map(d => T[d] || d),
+                            datasets: [{
+                                data: diseaseCounts,
+                                backgroundColor: diseaseColors.slice(0, diseaseLabels.length),
+                                borderWidth: 2, borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '65%',
+                            plugins: { legend: { position: 'bottom', labels: { padding: 10, usePointStyle: true, font: { size: 11 } } } }
+                        }
+                    });
+                }
+
+                // 3. Scan Timeline
+                const timelineCtx = document.getElementById('timeline-chart');
+                if (timelineCtx && data.timeline.length > 0) {
+                    new Chart(timelineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: data.timeline.map(t => formatDate(t.date)),
+                            datasets: [
+                                { label: 'ആരോഗ്യമുള്ളത്', data: data.timeline.map(t => t.healthy), borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#2ecc71' },
+                                { label: 'രോഗബാധിതം', data: data.timeline.map(t => t.diseased), borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)', fill: true, tension: 0.4, borderDash: [5, 5], pointRadius: 4, pointBackgroundColor: '#e74c3c' }
+                            ]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } } },
+                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                        }
+                    });
+                }
+
+                // 4. Health Ring
+                const healthCtx = document.getElementById('health-ring');
+                if (healthCtx) {
+                    new Chart(healthCtx, {
+                        type: 'doughnut',
+                        data: {
+                            datasets: [{ data: [data.health_score, 100 - data.health_score], backgroundColor: ['#2ecc71', '#e4e6e9'], borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '78%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+                    });
+                }
+
+                // 5. Severity Ring (sidebar)
+                const sevRingCtx = document.getElementById('severity-ring');
+                if (sevRingCtx) {
+                    new Chart(sevRingCtx, {
+                        type: 'doughnut',
+                        data: {
+                            datasets: [{ data: [avgSev, 100 - avgSev], backgroundColor: [getSeverityColor(avgSev), '#e4e6e9'], borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '78%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+                    });
+                }
+
+                requestLocation();
+
+            } catch (e) {
+                console.error('Dashboard error:', e);
+                root.innerHTML = `<div class="card empty-state"><p>ഡാഷ്ബോർഡ് ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല. ദയവായി predictions table ഉണ്ടെന്ന് ഉറപ്പാക്കുക.</p></div>`;
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>

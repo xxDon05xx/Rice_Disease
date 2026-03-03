@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ബന്ധപ്പെടുക | Rice Doctor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        .contact-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .contact-header {
+            margin-bottom: 2rem;
+            color: var(--secondary-color);
+        }
+
+        .team-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .team-member {
+            font-size: 1.2rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            color: var(--text-color);
+            transition: transform 0.2s;
+        }
+
+        .team-member:hover {
+            transform: translateY(-2px);
+            background-color: #f0fdf4;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .phone-number {
+            display: block;
+            margin-top: 0.5rem;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .phone-icon {
+            color: var(--primary-color);
+            margin-right: 0.4rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <a href="/">
+                    <img src="{{ url_for('static', filename='title.png') }}" alt="Rice Doctor Title"
+                        class="title-image">
+                </a>
+                <nav>
+                    <a href="/" class="nav-link">ഡാഷ്ബോർഡ്</a>
+                    <a href="/scan" class="nav-link">സ്കാൻ ചെയ്യുക</a>
+                    <a href="/chat" class="nav-link">കൂട്ടായ്മ</a>
+                    <a href="/contact" class="nav-link active">ബന്ധപ്പെടുക</a>
+
+                    {% if session.get('username') %}
+                    <span class="nav-user">👤 {{ session['username'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link logout-btn">Logout</a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link login-btn">Login</a>
+                    {% endif %}
+                </nav>
+            </div>
+    </header>
+
+    <main class="main-content">
+        <div class="contact-container">
+            <h1 class="contact-header">ഞങ്ങളെ ബന്ധപ്പെടുക (Team)</h1>
+            <ul class="team-list">
+                <li class="team-member">
+                    Arathi V
+                    <span class="phone-number"><span class="phone-icon">📞</span> xxxxxxxxxx</span>
+                </li>
+                <li class="team-member">
+                    Athira Harikumar
+                    <span class="phone-number"><span class="phone-icon">📞</span> xxxxxxxxxx</span>
+                </li>
+                <li class="team-member">
+                    Athira Mani
+                    <span class="phone-number"><span class="phone-icon">📞</span> xxxxxxxxxx</span>
+                </li>
+                <li class="team-member">
+                    Dino Saji Sam
+                    <span class="phone-number"><span class="phone-icon">📞</span> xxxxxxxxxx</span>
+                </li>
+                <li class="team-member">
+                    Abel Tom Augustine
+                    <span class="phone-number"><span class="phone-icon">📞</span> xxxxxxxxxx</span>
+                </li>
+            </ul>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Rice Doctor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='title.png') }}" alt="Rice Doctor Logo" class="auth-logo">
+            <h2>ലോഗിൻ ചെയ്യുക</h2>
+            <p>നിങ്ങളുടെ അക്കൗണ്ടിലേക്ക് പ്രവേശിക്കുക</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <div class="flash-message alert">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('login') }}" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="username">യൂസർനെയിം</label>
+                <input type="text" id="username" name="username" required placeholder="കർഷകന്റെ പേര്">
+            </div>
+            <div class="form-group">
+                <label for="password">പാസ്‌വേഡ്</label>
+                <input type="password" id="password" name="password" required placeholder="രഹസ്യവാക്ക്">
+            </div>
+            <button type="submit" class="btn primary full-width">ലോഗിൻ</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>അക്കൗണ്ട് ഇല്ലേ? <a href="{{ url_for('signup') }}" class="auth-link">രജിസ്റ്റർ ചെയ്യുക</a></p>
+        </div>
+    </div>
+</body>
+
+</html>
